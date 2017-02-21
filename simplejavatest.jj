@@ -1,0 +1,119 @@
+options {
+  IGNORE_CASE=false;
+}
+
+PARSER_BEGIN(simplejava)
+
+public class simplejava {
+}
+
+PARSER_END(simplejava)
+
+TOKEN_MGR_DECLS :
+{
+    public static int numComments = 0;
+}
+
+SKIP :
+{
+    <" ">
+|   <"\n">
+|   <"\t">
+|   < "//" (~["\n"])* "\n">
+|   <"/*">     {numComments++; SwitchTo(IN_COMMENT);}
+}
+
+<IN_COMMENT>
+SKIP :
+{
+    < "/*"> {numComments++;}
+|   < "*/">     {
+        numComments -= 1;
+        if(numComments == 0){
+            SwitchTo(DEFAULT);
+        }
+    }
+|   < ~[]>
+}
+
+TOKEN :
+{
+	< FOR: "for">
+|	< IF: "if">
+|   < WHILE: "while">
+|   < DO: "do">
+|   < ELSE: "else">
+|   < CLASS: "class">
+|   < TRUE: "true">
+|   < FALSE: "false">
+|   < RETURN: "return">
+}
+
+TOKEN :
+{
+    < INTEGER_LITERAL: (["0"-"9"])+>
+|   < IDENTIFIER: ["a"-"z", "A"-"Z", "_"](["a"-"z", "A"-"Z", "0"-"9", "_"])*>
+}
+
+TOKEN :
+{
+	< PLUS: "+">
+|	< MINUS: "-">
+|   < MULTIPLY: "*">
+|   < DIVIDE: "/">
+|   < EQUAL: "==">
+|   < GT: ">">
+|	< NOT: "!">
+|   < LEFT_BRACE: "{">
+|   < LEFT_BRACKET: "[">
+|   < RIGHT_BRACKET: "]">
+|	< PERIOD: ".">
+|   < COMMA: ",">
+|   < GT_EQ: ">=">
+|   < SEMICOLON: ";">
+|   < AND: "&&">
+|	< RIGHT_BRACE: "}">
+|   < LEFT_PARENTHESIS: "(">
+|   < RIGHT_PARENTHESIS: ")">
+|   < NOT_EQUAL: "!=">
+|	< LT_EQ: "<=">
+|   < LT: "<">
+|   < GETS: "=">
+|   < OR: "||">
+}
+
+void program():
+{}
+{
+    (initialization())+
+}
+
+void mainfunc():
+{}
+{
+    ("void main") <LEFT_PARENTHESIS> <RIGHT_PARENTHESIS> <LEFT_BRACE> <RIGHT_BRACE>
+}
+
+void statement():
+{}
+{
+    initialization()
+}
+
+void initialization():
+{}
+{
+    <IDENTIFIER> <IDENTIFIER> (arraydim())* <SEMICOLON>
+}
+
+void arraydim():
+{}
+{
+    <LEFT_BRACKET><RIGHT_BRACKET>
+}
+
+void variable():
+{}
+{
+
+}
