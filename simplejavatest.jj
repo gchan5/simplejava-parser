@@ -7,95 +7,146 @@ PARSER_BEGIN(simplejava)
 public class simplejava {
 }
 
+
 PARSER_END(simplejava)
 
-TOKEN_MGR_DECLS :
+TOKEN_MGR_DECLS : 
 {
-    public static int numComments = 0;
+    public static int numcomments = 0;
+}
+
+SKIP : 
+{
+    < "//" > : INLINE_COMMENT
+|   < " " >
+|   < "\n" >
+|   < "\t" >
 }
 
 SKIP :
 {
-    <" ">
-|   <"\n">
-|   <"\t">
-|   < "//" (~["\n"])* "\n">
-|   <"/*">     {numComments++; SwitchTo(IN_COMMENT);}
+< "/*" > {numcomments++;}: IN_MULTI_LINE_COMMENT
 }
 
-<IN_COMMENT>
+<IN_MULTI_LINE_COMMENT>
 SKIP :
 {
-    < "/*"> {numComments++;}
-|   < "*/">     {
-        numComments -= 1;
-        if(numComments == 0){
-            SwitchTo(DEFAULT);
-        }
-    }
-|   < ~[]>
+    < " " >
+|   < "/*"> {numcomments++;}
+|   < "*/" > {numcomments--; if(numcomments == 0) SwitchTo(DEFAULT);}
+|   < ~[] >
 }
 
-TOKEN :
+<INLINE_COMMENT>
+SKIP :
 {
-    < FOR: "for">
-|   < IF: "if">
-|   < WHILE: "while">
+    <"\n"> : DEFAULT
+|   < ~[] >
+}
+
+TOKEN : 
+{
+    <INTEGER_LITERAL: (["0"-"9"])+>
 |   < DO: "do">
 |   < ELSE: "else">
-|   < CLASS: "class">
-|   < TRUE: "true">
 |   < FALSE: "false">
+|   < FOR: "for">
+|   < IF: "if">
+|   < TRUE: "true">
+|   < WHILE: "while">
 |   < RETURN: "return">
+|   < PLUS_EQUALS: "+=">
+|   < NOT_EQUALS: "!+">
+|   < EQUALS_EQUALS: "==">
+|   < LESS_THAN_EQUAL_TO: "<=">
+|   < GREATER_THAN_EQUAL_TO: ">=">
+|   < PLUS_PLUS: "++">
+|   < MINUS_MINUS: "--">
+|   < AND: "&&">
+|   < OR: "||">
+|   <IDENTIFIER: ["a"-"z", "A"-"Z"](["a"-"z", "A"-"Z","0"-"9"])*>
 }
 
-TOKEN :
+TOKEN : 
 {
-    < INTEGER_LITERAL: (("-" | {})["0"-"9"])+>
-|   < IDENTIFIER: ["a"-"z", "A"-"Z", "_"](["a"-"z", "A"-"Z", "0"-"9", "_"])*>
-}
-
-TOKEN :
-{
-    < PLUS: "+">
-|   < MINUS: "-">
-|   < MULTIPLY: "*">
-|   < DIVIDE: "/">
-|   < EQUAL: "==">
-|   < GT: ">">
-|   < NOT: "!">
+    < EQUALS: "=" >
+|   < PLUS: "+" >
+|   < MINUS: "-" >
+|   < ASTERISK: "*" >
+|   < SLASH: "/" >
+|   < LEFT_PARENTHESIS: "(">
+|   < RIGHT_PARENTHESIS: ")">
 |   < LEFT_BRACE: "{">
+|   < RIGHT_BRACE: "}">
 |   < LEFT_BRACKET: "[">
 |   < RIGHT_BRACKET: "]">
 |   < PERIOD: ".">
 |   < COMMA: ",">
-|   < GT_EQ: ">=">
 |   < SEMICOLON: ";">
-|   < AND: "&&">
-|   < RIGHT_BRACE: "}">
-|   < LEFT_PARENTHESIS: "(">
-|   < RIGHT_PARENTHESIS: ")">
-|   < NOT_EQUAL: "!=">
-|   < LT_EQ: "<=">
-|   < LT: "<">
-|   < GETS: "=">
-|   < OR: "||">
+|   < LESS_THAN: "<">
+|   < GREATER_THAN: ">">
+|   < NOT: "!">
 }
+
 
 void program():
 {}
 {
-    (mainfunc())+
+    (s())*
+    <EOF>
 }
 
-void mainfunc():
+void s():
 {}
 {
-    ("void main") <LEFT_PARENTHESIS> <RIGHT_PARENTHESIS> <LEFT_BRACE>
-
-    block()
+    ii() s()
+|   (params())* (class_or_func() | func_proto())
 }
 
+void class_or_func():
+{}
+{
+    <LEFT_BRACE> block()    
+}
+
+void func_proto():
+{}
+{
+    <SEMICOLON> 
+}
+
+
+void ii():
+{}
+{
+    <IDENTIFIER> <IDENTIFIER>
+}
+
+//Series of 0 or more arguments
+void params():
+{}
+{
+    <LEFT_PARENTHESIS>  arg()
+}
+
+void arg():
+{}
+{
+    <COMMA> arg()
+|   <IDENTIFIER> var() (complex())* arg() 
+|   <RIGHT_PARENTHESIS>
+}
+
+void arg_prime():
+{}
+{
+    <COMMA> arg()
+|   <IDENTIFIER> var() (complex())* arg() 
+|   <RIGHT_PARENTHESIS>
+}
+
+
+//Defines everything between two braces of a function or class
 void block():
 {}
 {
@@ -105,13 +156,63 @@ void block():
 void statement():
 {}
 {
-    LHS()
+    <LEFT_BRACE> block()
+|   <DO>
+|   LHS()
+|   iff()
+|   <FOR> <LEFT_PARENTHESIS> furr()
+|   whil()
+}
+
+void whil():
+{}
+{
+    <WHILE> bool()
+}
+
+void furr():
+{}
+{
+    <RIGHT_PARENTHESIS>
+|   furr_prime()
+}
+
+void furr_prime():
+{}
+{
+    <SEMICOLON> furr_prime()
+|   var() furr_prime()
+|   (<PLUS_PLUS> | <MINUS_MINUS>) furr()
+|   (<GREATER_THAN> | <LESS_THAN> | <EQUALS> RHS_prime()) furr()
+}
+
+void iff():
+{}
+{
+    <IF> bool()
+|   <ELSE>
+}
+
+void bool():
+{}
+{
+    <LEFT_PARENTHESIS> bool() ((<AND> | <OR> ) bool())* <RIGHT_PARENTHESIS>
+|   var() bool_prime()
+}
+
+void bool_prime():
+{}
+{
+    ( <GREATER_THAN> | <LESS_THAN> |    <GREATER_THAN_EQUAL_TO> | <LESS_THAN_EQUAL_TO> | <EQUALS> )
+    var()
 }
 
 void LHS():
 {}
 {
-    var() LHS_prime()
+    //this will bite me later just watch
+    <SEMICOLON>
+|   var() LHS_prime()
 }
 
 void LHS_prime():
@@ -126,13 +227,19 @@ void RHS():
 {}
 {
     <SEMICOLON>
-|   <GETS> RHS_prime()
+|   <EQUALS> RHS_prime()
 }
 
 void RHS_prime():
 {}
 {
-    var() RHS_prime()
+
+    (<PLUS> | <MINUS> | <ASTERISK> | <SLASH> | <AND> | <OR>
+    | <LESS_THAN_EQUAL_TO>
+    | <GREATER_THAN_EQUAL_TO>
+    | <LESS_THAN>
+    | <GREATER_THAN> | <NOT>) RHS_prime()
+|   var() RHS_prime()
 |   <SEMICOLON>
 |   complex() RHS_prime()
 }
@@ -140,59 +247,45 @@ void RHS_prime():
 void var():
 {}
 {
-    <INTEGER_LITERAL>
-|   <IDENTIFIER>
-}
-
-void complex():
-{}
-{
-    <LEFT_BRACKET> complex_prime()
-|   <PERIOD> var()
-|   <LEFT_PARENTHESIS> complex_prime()
-|   <RIGHT_BRACKET>
-}
-
-void complex_prime():
-{}
-{
-    var() complex()
-|   <RIGHT_BRACKET>
-|   <RIGHT_PARENTHESIS>
-}
-
-void classdef():
-{}
-{
-    <CLASS> <IDENTIFIER> <LEFT_BRACE> (initialization())* <RIGHT_BRACE>
-}
-
-void boolean_expression():
-{}
-{
-    <NOT> expression()
-|   expression() boolean_operator() expression()
-}
-
-void boolean_operator:
-{}
-{
-    (<OR> | <EQUAL> | <AND> | <NOT_EQUAL> | <GT_EQ> | <LT_EQ> | <LT> | <GT>)
+    <INTEGER_LITERAL> | <IDENTIFIER>
 }
 
 void expression():
 {}
 {
-    var() expression_prime()
-|   <MINUS> var() expression_prime()
-|   LOOKAHEAD(3) <LEFT_PARENTHESIS> <MINUS> var() expression_prime()
-|   <LEFT_PARENTHESIS> expression()
+    <LEFT_PARENTHESIS> expression() <RIGHT_PARENTHESIS> (expression_prime())*
+|   var() (expression_prime())*
 }
+
 
 void expression_prime():
 {}
 {
-    LOOKAHEAD(2) (<MULTIPLY> | <DIVIDE> | <PLUS> | <MINUS>) var() expression_prime() boolean_operator()
-|   (<MULTIPLY> | <DIVIDE> | <PLUS> | <MINUS>) <MINUS> var() expression_prime() boolean_operator()
-|   <RIGHT_PARENTHESIS> expression_prime() boolean_operator()
+    (<PLUS> | <MINUS> | <ASTERISK> | <SLASH> | <AND> | <OR>
+    | <LESS_THAN_EQUAL_TO>
+    | <GREATER_THAN_EQUAL_TO>
+    | <LESS_THAN>
+    | <GREATER_THAN>) var()
 }
+
+void complex():
+{}
+{
+    <PERIOD> var()
+|   <LEFT_BRACKET> complex_prime()
+|   <RIGHT_BRACKET>
+|   <LEFT_PARENTHESIS> (LOOKAHEAD(3) complex() | complex_prime())
+|   <RIGHT_PARENTHESIS>
+|   <PLUS_PLUS>
+|   <MINUS_MINUS>
+|   <COMMA>
+}
+
+void complex_prime():
+{}
+{
+    expression() complex()
+|   <RIGHT_BRACKET>
+|   <RIGHT_PARENTHESIS>
+}
+
