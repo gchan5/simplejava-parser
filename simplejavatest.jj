@@ -166,3 +166,25 @@ void classdef():
 {
     <CLASS> <IDENTIFIER> <LEFT_BRACE> (initialization())* <RIGHT_BRACE>
 }
+
+void boolean_expression():
+{}
+{
+    <NOT> expression()
+|   expression() (<OR> | <EQUAL> | <AND> | <NOT_EQUAL> | <GT_EQ> | <LT_EQ> | <LT> | <GT>) expression()
+}
+
+void expression():
+{}
+{
+    var() expression_prime()
+|   <MINUS> var() expression_prime()
+}
+
+void expression_prime():
+{}
+{
+    LOOKAHEAD(2) (<MULTIPLY> | <DIVIDE> | <PLUS> | <MINUS>) var() expression_prime()
+|   (<MULTIPLY> | <DIVIDE> | <PLUS> | <MINUS>) <MINUS> var() expression_prime()
+|   {}
+}
