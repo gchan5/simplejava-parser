@@ -140,7 +140,8 @@ void RHS_prime():
 void var():
 {}
 {
-    <INTEGER_LITERAL> | <IDENTIFIER>
+    <INTEGER_LITERAL>
+|   <IDENTIFIER>
 }
 
 void complex():
