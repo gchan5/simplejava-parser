@@ -38,8 +38,8 @@ SKIP :
 
 TOKEN :
 {
-	< FOR: "for">
-|	< IF: "if">
+    < FOR: "for">
+|   < IF: "if">
 |   < WHILE: "while">
 |   < DO: "do">
 |   < ELSE: "else">
@@ -57,26 +57,26 @@ TOKEN :
 
 TOKEN :
 {
-	< PLUS: "+">
-|	< MINUS: "-">
+    < PLUS: "+">
+|   < MINUS: "-">
 |   < MULTIPLY: "*">
 |   < DIVIDE: "/">
 |   < EQUAL: "==">
 |   < GT: ">">
-|	< NOT: "!">
+|   < NOT: "!">
 |   < LEFT_BRACE: "{">
 |   < LEFT_BRACKET: "[">
 |   < RIGHT_BRACKET: "]">
-|	< PERIOD: ".">
+|   < PERIOD: ".">
 |   < COMMA: ",">
 |   < GT_EQ: ">=">
 |   < SEMICOLON: ";">
 |   < AND: "&&">
-|	< RIGHT_BRACE: "}">
+|   < RIGHT_BRACE: "}">
 |   < LEFT_PARENTHESIS: "(">
 |   < RIGHT_PARENTHESIS: ")">
 |   < NOT_EQUAL: "!=">
-|	< LT_EQ: "<=">
+|   < LT_EQ: "<=">
 |   < LT: "<">
 |   < GETS: "=">
 |   < OR: "||">
@@ -85,35 +85,77 @@ TOKEN :
 void program():
 {}
 {
-    (initialization())+
+    (mainfunc())+
 }
 
 void mainfunc():
 {}
 {
-    ("void main") <LEFT_PARENTHESIS> <RIGHT_PARENTHESIS> <LEFT_BRACE> <RIGHT_BRACE>
+    ("void main") <LEFT_PARENTHESIS> <RIGHT_PARENTHESIS> <LEFT_BRACE>
+
+    block()
+}
+
+void block():
+{}
+{
+    (statement())* <RIGHT_BRACE>
 }
 
 void statement():
 {}
 {
-    initialization()
+    LHS()
 }
 
-void initialization():
+void LHS():
 {}
 {
-    <IDENTIFIER> <IDENTIFIER> (arraydim())* <SEMICOLON>
+    var() LHS_prime()
 }
 
-void arraydim():
+void LHS_prime():
 {}
 {
-    <LEFT_BRACKET><RIGHT_BRACKET>
+    var() LHS_prime()
+|   complex() LHS_prime()
+|   RHS()
 }
 
-void variable():
+void RHS():
 {}
 {
+    <SEMICOLON>
+|   <GETS> RHS_prime()
+}
 
+void RHS_prime():
+{}
+{
+    var() RHS_prime()
+|   <SEMICOLON>
+|   complex() RHS_prime()
+}
+
+void var():
+{}
+{
+    <INTEGER_LITERAL> | <IDENTIFIER>
+}
+
+void complex():
+{}
+{
+    <LEFT_BRACKET> complex_prime()
+|   <PERIOD> var()
+|   <LEFT_PARENTHESIS> complex_prime()
+|   <RIGHT_BRACKET>
+}
+
+void complex_prime():
+{}
+{
+    var() complex()
+|   <RIGHT_BRACKET>
+|   <RIGHT_PARENTHESIS>
 }
