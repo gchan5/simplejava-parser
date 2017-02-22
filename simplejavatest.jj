@@ -171,7 +171,13 @@ void boolean_expression():
 {}
 {
     <NOT> expression()
-|   expression() (<OR> | <EQUAL> | <AND> | <NOT_EQUAL> | <GT_EQ> | <LT_EQ> | <LT> | <GT>) expression()
+|   expression() boolean_operator() expression()
+}
+
+void boolean_operator:
+{}
+{
+    (<OR> | <EQUAL> | <AND> | <NOT_EQUAL> | <GT_EQ> | <LT_EQ> | <LT> | <GT>)
 }
 
 void expression():
@@ -179,12 +185,14 @@ void expression():
 {
     var() expression_prime()
 |   <MINUS> var() expression_prime()
+|   LOOKAHEAD(3) <LEFT_PARENTHESIS> <MINUS> var() expression_prime()
+|   <LEFT_PARENTHESIS> expression()
 }
 
 void expression_prime():
 {}
 {
-    LOOKAHEAD(2) (<MULTIPLY> | <DIVIDE> | <PLUS> | <MINUS>) var() expression_prime()
-|   (<MULTIPLY> | <DIVIDE> | <PLUS> | <MINUS>) <MINUS> var() expression_prime()
-|   {}
+    LOOKAHEAD(2) (<MULTIPLY> | <DIVIDE> | <PLUS> | <MINUS>) var() expression_prime() boolean_operator()
+|   (<MULTIPLY> | <DIVIDE> | <PLUS> | <MINUS>) <MINUS> var() expression_prime() boolean_operator()
+|   <RIGHT_PARENTHESIS> expression_prime() boolean_operator()
 }
