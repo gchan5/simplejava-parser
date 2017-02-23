@@ -64,7 +64,7 @@ TOKEN :
 |   < MINUS_MINUS: "--">
 |   < AND: "&&">
 |   < OR: "||">
-|   <IDENTIFIER: ["a"-"z", "A"-"Z"](["a"-"z", "A"-"Z","0"-"9"])*>
+|   <IDENTIFIER: ["a"-"z", "A"-"Z"](["a"-"z", "A"-"Z","0"-"9", "_"])*>
 }
 
 TOKEN : 
@@ -99,22 +99,15 @@ void program():
 void s():
 {}
 {
-    ii() s()
-|   (params())* (class_or_func() | func_proto())
+    ii() (class_decl() | params() (class_decl() | <SEMICOLON> ))
 }
 
-void class_or_func():
+//class foo{stuff}
+void class_decl():
 {}
 {
     <LEFT_BRACE> block()    
 }
-
-void func_proto():
-{}
-{
-    <SEMICOLON> 
-}
-
 
 void ii():
 {}
@@ -132,17 +125,10 @@ void params():
 void arg():
 {}
 {
-    <COMMA> arg()
-|   <IDENTIFIER> var() (complex())* arg() 
+    ii() arg()
+|   <LEFT_BRACKET> <RIGHT_BRACKET> arg()
 |   <RIGHT_PARENTHESIS>
-}
-
-void arg_prime():
-{}
-{
-    <COMMA> arg()
-|   <IDENTIFIER> var() (complex())* arg() 
-|   <RIGHT_PARENTHESIS>
+|   <COMMA> arg()
 }
 
 
@@ -162,6 +148,13 @@ void statement():
 |   iff()
 |   <FOR> <LEFT_PARENTHESIS> furr()
 |   whil()
+|   retern()
+}
+
+void retern():
+{}
+{
+    <RETURN> RHS_prime()
 }
 
 void whil():
@@ -181,7 +174,7 @@ void furr_prime():
 {}
 {
     <SEMICOLON> furr_prime()
-|   var() furr_prime()
+|   var() furr()
 |   (<PLUS_PLUS> | <MINUS_MINUS>) furr()
 |   (<GREATER_THAN> | <LESS_THAN> | <EQUALS> RHS_prime()) furr()
 }
@@ -197,13 +190,13 @@ void bool():
 {}
 {
     <LEFT_PARENTHESIS> bool() ((<AND> | <OR> ) bool())* <RIGHT_PARENTHESIS>
-|   var() bool_prime()
+|   var() (bool_prime())*
 }
 
 void bool_prime():
 {}
 {
-    ( <GREATER_THAN> | <LESS_THAN> |    <GREATER_THAN_EQUAL_TO> | <LESS_THAN_EQUAL_TO> | <EQUALS> )
+    ( <GREATER_THAN> | <LESS_THAN> | <GREATER_THAN_EQUAL_TO> | <LESS_THAN_EQUAL_TO> | <EQUALS_EQUALS> )
     var()
 }
 
@@ -247,7 +240,8 @@ void RHS_prime():
 void var():
 {}
 {
-    <INTEGER_LITERAL> | <IDENTIFIER>
+    <NOT> var()
+|   <INTEGER_LITERAL> | <IDENTIFIER> | <TRUE> | <FALSE>
 }
 
 void expression():
