@@ -10,12 +10,12 @@ public class simplejava {
 
 PARSER_END(simplejava)
 
-TOKEN_MGR_DECLS : 
+TOKEN_MGR_DECLS :
 {
     public static int numcomments = 0;
 }
 
-SKIP : 
+SKIP :
 {
     < "//" > : INLINE_COMMENT
 |   < " " >
@@ -44,7 +44,7 @@ SKIP :
 |   < ~[] >
 }
 
-TOKEN : 
+TOKEN :
 {
     <INTEGER_LITERAL: (["0"-"9"])+>
 |   < DO: "do">
@@ -67,7 +67,7 @@ TOKEN :
 |   <IDENTIFIER: ["a"-"z", "A"-"Z"](["a"-"z", "A"-"Z","0"-"9", "_"])*>
 }
 
-TOKEN : 
+TOKEN :
 {
     < EQUALS: "=" >
 |   < PLUS: "+" >
@@ -99,17 +99,17 @@ void program():
 void s():
 {}
 {
-    ii() (class_decl() | params() (class_decl() | <SEMICOLON> ))
+    header() (class_decl() | params() (class_decl() | <SEMICOLON> ))
 }
 
 //class foo{stuff}
 void class_decl():
 {}
 {
-    <LEFT_BRACE> block()    
+    <LEFT_BRACE> block()
 }
 
-void ii():
+void header():
 {}
 {
     <IDENTIFIER> <IDENTIFIER>
@@ -125,7 +125,8 @@ void params():
 void arg():
 {}
 {
-    ii() arg()
+    LOOKAHEAD(2) header() arg()
+|   expression() arg()
 |   <LEFT_BRACKET> <RIGHT_BRACKET> arg()
 |   <RIGHT_PARENTHESIS>
 |   <COMMA> arg()
@@ -146,37 +147,37 @@ void statement():
 |   <DO>
 |   LHS()
 |   iff()
-|   <FOR> <LEFT_PARENTHESIS> furr()
-|   whil()
-|   retern()
+|   <FOR> <LEFT_PARENTHESIS> forr()
+|   while_block()
+|   returnn()
 }
 
-void retern():
+void returnn():
 {}
 {
     <RETURN> RHS_prime()
 }
 
-void whil():
+void while_block():
 {}
 {
     <WHILE> bool()
 }
 
-void furr():
+void forr():
 {}
 {
     <RIGHT_PARENTHESIS>
-|   furr_prime()
+|   for_prime()
 }
 
-void furr_prime():
+void for_prime():
 {}
 {
-    <SEMICOLON> furr_prime()
-|   var() furr()
-|   (<PLUS_PLUS> | <MINUS_MINUS>) furr()
-|   (<GREATER_THAN> | <LESS_THAN> | <EQUALS> RHS_prime()) furr()
+    <SEMICOLON> for_prime()
+|   var() forr()
+|   (<PLUS_PLUS> | <MINUS_MINUS>) forr()
+|   (<GREATER_THAN> | <LESS_THAN> | <EQUALS> RHS_prime()) forr()
 }
 
 void iff():
@@ -190,14 +191,15 @@ void bool():
 {}
 {
     <LEFT_PARENTHESIS> bool() ((<AND> | <OR> ) bool())* <RIGHT_PARENTHESIS>
-|   var() (bool_prime())*
+|   LOOKAHEAD(3) var() bool()
+|   var()
+|   bool_prime()
 }
 
 void bool_prime():
 {}
 {
-    ( <GREATER_THAN> | <LESS_THAN> | <GREATER_THAN_EQUAL_TO> | <LESS_THAN_EQUAL_TO> | <EQUALS_EQUALS> )
-    var()
+    ( <GREATER_THAN> | <LESS_THAN> | <GREATER_THAN_EQUAL_TO> | <LESS_THAN_EQUAL_TO> | <EQUALS_EQUALS> ) var()
 }
 
 void LHS():
@@ -227,12 +229,12 @@ void RHS_prime():
 {}
 {
 
-    (<PLUS> | <MINUS> | <ASTERISK> | <SLASH> | <AND> | <OR>
+    LOOKAHEAD(2) (<PLUS> | <MINUS> | <ASTERISK> | <SLASH> | <AND> | <OR>
     | <LESS_THAN_EQUAL_TO>
     | <GREATER_THAN_EQUAL_TO>
     | <LESS_THAN>
     | <GREATER_THAN> | <NOT>) RHS_prime()
-|   var() RHS_prime()
+|   expression() RHS_prime()
 |   <SEMICOLON>
 |   complex() RHS_prime()
 }
@@ -240,15 +242,16 @@ void RHS_prime():
 void var():
 {}
 {
-    <NOT> var()
-|   <INTEGER_LITERAL> | <IDENTIFIER> | <TRUE> | <FALSE>
+    <NOT> expression()
+|   LOOKAHEAD(2) <IDENTIFIER> params()
+|   <INTEGER_LITERAL> | <IDENTIFIER> | <TRUE> | <FALSE> 
 }
 
 void expression():
 {}
 {
-    <LEFT_PARENTHESIS> expression() <RIGHT_PARENTHESIS> (expression_prime())*
-|   var() (expression_prime())*
+    <LEFT_PARENTHESIS> expression() <RIGHT_PARENTHESIS> (LOOKAHEAD(2) expression_prime())*
+|   var() (LOOKAHEAD(2) expression_prime())*
 }
 
 
@@ -268,8 +271,6 @@ void complex():
     <PERIOD> var()
 |   <LEFT_BRACKET> complex_prime()
 |   <RIGHT_BRACKET>
-|   <LEFT_PARENTHESIS> (LOOKAHEAD(3) complex() | complex_prime())
-|   <RIGHT_PARENTHESIS>
 |   <PLUS_PLUS>
 |   <MINUS_MINUS>
 |   <COMMA>
@@ -280,6 +281,4 @@ void complex_prime():
 {
     expression() complex()
 |   <RIGHT_BRACKET>
-|   <RIGHT_PARENTHESIS>
 }
-
