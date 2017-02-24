@@ -127,7 +127,7 @@ void arg():
 {
     LOOKAHEAD(2) header() arg()
 |   expression() arg()
-|   <LEFT_BRACKET> <RIGHT_BRACKET> arg()
+|   <LEFT_BRACKET> (var())? <RIGHT_BRACKET> arg()
 |   <RIGHT_PARENTHESIS>
 |   <COMMA> arg()
 }
@@ -175,7 +175,7 @@ void for_prime():
 {}
 {
     <SEMICOLON> for_prime()
-|   var() forr()
+|   expression() forr()
 |   (<PLUS_PLUS> | <MINUS_MINUS>) forr()
 |   (<GREATER_THAN> | <LESS_THAN> | <EQUALS> RHS_prime()) forr()
 }
@@ -270,7 +270,8 @@ void expression_prime():
     | <LESS_THAN_EQUAL_TO>
     | <GREATER_THAN_EQUAL_TO>
     | <LESS_THAN>
-    | <GREATER_THAN>) var()
+    | <GREATER_THAN>
+    | <EQUALS_EQUALS>) var()
 }
 
 void complex():
