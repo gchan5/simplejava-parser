@@ -56,7 +56,7 @@ TOKEN :
 |   < WHILE: "while">
 |   < RETURN: "return">
 |   < PLUS_EQUALS: "+=">
-|   < NOT_EQUALS: "!+">
+|   < NOT_EQUALS: "!=">
 |   < EQUALS_EQUALS: "==">
 |   < LESS_THAN_EQUAL_TO: "<=">
 |   < GREATER_THAN_EQUAL_TO: ">=">
@@ -126,7 +126,7 @@ void arg():
 {}
 {
     LOOKAHEAD(2) header() arg()
-|   var() arg()
+|   expression() arg()
 |   <LEFT_BRACKET> <RIGHT_BRACKET> arg()
 |   <RIGHT_PARENTHESIS>
 |   <COMMA> arg()
@@ -190,15 +190,24 @@ void iff():
 void bool():
 {}
 {
-    <LEFT_PARENTHESIS> bool() ((<AND> | <OR> ) bool())* <RIGHT_PARENTHESIS>
-|   LOOKAHEAD(3) (var() (LOOKAHEAD(3) params() | (bool_prime())*) | arg())
+    <LEFT_PARENTHESIS> bool() (bool())* <RIGHT_PARENTHESIS> {System.out.println("entered bool()");}
+|   LOOKAHEAD(2) args()
+|   LOOKAHEAD(2) var()
+|   bool_prime()
+
+}
+
+void args():
+{}
+{
+    <IDENTIFIER> (<LEFT_BRACKET>(expression())?<RIGHT_BRACKET>)+ {System.out.println("entered args()");}
 }
 
 void bool_prime():
 {}
 {
-    ( <GREATER_THAN> | <LESS_THAN> | <GREATER_THAN_EQUAL_TO> | <LESS_THAN_EQUAL_TO> | <EQUALS_EQUALS> )
-    var()
+    LOOKAHEAD(2) ( <AND> | <OR> | <GREATER_THAN> | <LESS_THAN> | <GREATER_THAN_EQUAL_TO> | <LESS_THAN_EQUAL_TO> | <EQUALS_EQUALS> | <NOT_EQUALS> ) var()
+|   ( <AND> | <OR> | <GREATER_THAN> | <LESS_THAN> | <GREATER_THAN_EQUAL_TO> | <LESS_THAN_EQUAL_TO> | <EQUALS_EQUALS> | <NOT_EQUALS> ) bool()
 }
 
 void LHS():
@@ -233,7 +242,7 @@ void RHS_prime():
     | <GREATER_THAN_EQUAL_TO>
     | <LESS_THAN>
     | <GREATER_THAN> | <NOT>) RHS_prime()
-|   var() RHS_prime()
+|   expression() RHS_prime()
 |   <SEMICOLON>
 |   complex() RHS_prime()
 }
@@ -241,14 +250,16 @@ void RHS_prime():
 void var():
 {}
 {
-    (<INTEGER_LITERAL> | <IDENTIFIER> | <TRUE> | <FALSE> | (<NOT> var()))
+    <NOT> expression()
+|   LOOKAHEAD(2) <IDENTIFIER> params()
+|   <INTEGER_LITERAL> | <IDENTIFIER> | <TRUE> | <FALSE>
 }
 
 void expression():
 {}
 {
-    <LEFT_PARENTHESIS> expression() <RIGHT_PARENTHESIS> (expression_prime())*
-|   var() (expression_prime())*
+    <LEFT_PARENTHESIS> expression() <RIGHT_PARENTHESIS> (LOOKAHEAD(2) expression_prime())*
+|   var() (LOOKAHEAD(2) expression_prime())*
 }
 
 
@@ -268,8 +279,6 @@ void complex():
     <PERIOD> var()
 |   <LEFT_BRACKET> complex_prime()
 |   <RIGHT_BRACKET>
-|   <LEFT_PARENTHESIS> (LOOKAHEAD(3) complex() | complex_prime())
-|   <RIGHT_PARENTHESIS>
 |   <PLUS_PLUS>
 |   <MINUS_MINUS>
 |   <COMMA>
@@ -280,5 +289,4 @@ void complex_prime():
 {
     expression() complex()
 |   <RIGHT_BRACKET>
-|   <RIGHT_PARENTHESIS>
 }
