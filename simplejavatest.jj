@@ -56,7 +56,7 @@ TOKEN :
 |   < WHILE: "while">
 |   < RETURN: "return">
 |   < PLUS_EQUALS: "+=">
-|   < NOT_EQUALS: "!+">
+|   < NOT_EQUALS: "!=">
 |   < EQUALS_EQUALS: "==">
 |   < LESS_THAN_EQUAL_TO: "<=">
 |   < GREATER_THAN_EQUAL_TO: ">=">
@@ -126,8 +126,8 @@ void arg():
 {}
 {
     LOOKAHEAD(2) header() arg()
-|   expression() arg()
-|   <LEFT_BRACKET> <RIGHT_BRACKET> arg()
+|   expression() (complex())* arg()
+|   <LEFT_BRACKET> (var())? <RIGHT_BRACKET> arg()
 |   <RIGHT_PARENTHESIS>
 |   <COMMA> arg()
 }
@@ -175,7 +175,7 @@ void for_prime():
 {}
 {
     <SEMICOLON> for_prime()
-|   var() forr()
+|   expression() forr()
 |   (<PLUS_PLUS> | <MINUS_MINUS>) forr()
 |   (<GREATER_THAN> | <LESS_THAN> | <EQUALS> RHS_prime()) forr()
 }
@@ -190,16 +190,24 @@ void iff():
 void bool():
 {}
 {
-    <LEFT_PARENTHESIS> bool() ((<AND> | <OR> ) bool())* <RIGHT_PARENTHESIS>
-|   LOOKAHEAD(3) var() bool()
-|   var()
+    <LEFT_PARENTHESIS> bool() (bool())* <RIGHT_PARENTHESIS> {System.out.println("entered bool()");}
+|   LOOKAHEAD(2) args()
+|   LOOKAHEAD(2) var()
 |   bool_prime()
+
+}
+
+void args():
+{}
+{
+    <IDENTIFIER> (<LEFT_BRACKET>(expression())?<RIGHT_BRACKET>)+ {System.out.println("entered args()");}
 }
 
 void bool_prime():
 {}
 {
-    ( <GREATER_THAN> | <LESS_THAN> | <GREATER_THAN_EQUAL_TO> | <LESS_THAN_EQUAL_TO> | <EQUALS_EQUALS> ) var()
+    LOOKAHEAD(2) ( <AND> | <OR> | <GREATER_THAN> | <LESS_THAN> | <GREATER_THAN_EQUAL_TO> | <LESS_THAN_EQUAL_TO> | <EQUALS_EQUALS> | <NOT_EQUALS> ) var()
+|   ( <AND> | <OR> | <GREATER_THAN> | <LESS_THAN> | <GREATER_THAN_EQUAL_TO> | <LESS_THAN_EQUAL_TO> | <EQUALS_EQUALS> | <NOT_EQUALS> ) bool()
 }
 
 void LHS():
@@ -244,7 +252,7 @@ void var():
 {
     <NOT> expression()
 |   LOOKAHEAD(2) <IDENTIFIER> params()
-|   <INTEGER_LITERAL> | <IDENTIFIER> | <TRUE> | <FALSE> 
+|   <INTEGER_LITERAL> | <IDENTIFIER> | <TRUE> | <FALSE>
 }
 
 void expression():
@@ -262,7 +270,8 @@ void expression_prime():
     | <LESS_THAN_EQUAL_TO>
     | <GREATER_THAN_EQUAL_TO>
     | <LESS_THAN>
-    | <GREATER_THAN>) var()
+    | <GREATER_THAN>
+    | <EQUALS_EQUALS>) var() (complex())?
 }
 
 void complex():
