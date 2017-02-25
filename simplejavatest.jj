@@ -126,8 +126,8 @@ void arg():
 {}
 {
     LOOKAHEAD(2) header() arg()
-|   expression() (complex())* arg()
-|   <LEFT_BRACKET> (var())? <RIGHT_BRACKET> arg()
+|   expression() (LOOKAHEAD(2) complex())* arg()
+|   <LEFT_BRACKET> (var())? (LOOKAHEAD(2) args_p())* <RIGHT_BRACKET> arg()
 |   <RIGHT_PARENTHESIS>
 |   <COMMA> arg()
 }
@@ -161,7 +161,7 @@ void returnn():
 void while_block():
 {}
 {
-    <WHILE> bool()
+    <WHILE> <LEFT_PARENTHESIS> bool() <RIGHT_PARENTHESIS>
 }
 
 void forr():
@@ -183,31 +183,72 @@ void for_prime():
 void iff():
 {}
 {
-    <IF> bool()
+    <IF> <LEFT_PARENTHESIS> bool() <RIGHT_PARENTHESIS>
 |   <ELSE>
 }
 
 void bool():
 {}
 {
-    <LEFT_PARENTHESIS> bool() (bool())* <RIGHT_PARENTHESIS> {System.out.println("entered bool()");}
-|   LOOKAHEAD(2) args()
-|   LOOKAHEAD(2) var()
-|   bool_prime()
+    LOOKAHEAD(3) <IDENTIFIER> (LOOKAHEAD(2) <LEFT_BRACKET>(ex())?<RIGHT_BRACKET>)+ (LOOKAHEAD(2) args_p())* (bool_prime())?  {System.out.println("entered bool_args()");}
+|   LOOKAHEAD(3) ex() (LOOKAHEAD(2) bool_prime())?    {System.out.println("entered ex()");}
+|   LOOKAHEAD(3) var() (LOOKAHEAD(2) bool_prime())?   {System.out.println("entered var() bool_prime()");}
+|   LOOKAHEAD(3) function_call() (LOOKAHEAD(2) bool_prime())?   {System.out.println("entered func");}
+|   bool_prime() {System.out.println("entered bool_prime()");}
+}
 
+void function_call():
+{}
+{
+    (<NOT>)? <IDENTIFIER> params()
+}
+
+void ex():
+{}
+{
+    LOOKAHEAD(3) args() (LOOKAHEAD(2) ex_p())? {System.out.println("entered args ex()");}
+|   LOOKAHEAD(3) (<NOT>)? <IDENTIFIER> params() (LOOKAHEAD(2) ex_p())? {System.out.println("entered params");}
+|   LOOKAHEAD(3) var() (LOOKAHEAD(2) ex_p())? {System.out.println("entered var ex()");}
+|   ex_p() {System.out.println("entered ex_p()");}
+}
+
+void ex_p():
+{}
+{
+    LOOKAHEAD(2) expression_ops() (LOOKAHEAD(3) args() | var())
+|   expression_ops() ex()
+|   <LEFT_PARENTHESIS> ex() <RIGHT_PARENTHESIS> (LOOKAHEAD(2) ex_p())?
+}
+
+void expression_ops():
+{}
+{
+    (<PLUS> | <MINUS> | <ASTERISK> | <SLASH> | <AND> | <OR>
+    | <LESS_THAN_EQUAL_TO>
+    | <GREATER_THAN_EQUAL_TO>
+    | <LESS_THAN>
+    | <NOT_EQUALS>
+    | <GREATER_THAN>
+    | <EQUALS_EQUALS>)
 }
 
 void args():
 {}
 {
-    <IDENTIFIER> (<LEFT_BRACKET>(expression())?<RIGHT_BRACKET>)+ {System.out.println("entered args()");}
+    <IDENTIFIER> (LOOKAHEAD(2) <LEFT_BRACKET>(ex())?<RIGHT_BRACKET>)+ (LOOKAHEAD(2) args_p())* {System.out.println("entered args()");}
+}
+
+void args_p():
+{}
+{
+    <PERIOD> (LOOKAHEAD(2) args() | <IDENTIFIER>) {System.out.println("entered args_p()");}
 }
 
 void bool_prime():
 {}
 {
-    LOOKAHEAD(2) ( <AND> | <OR> | <GREATER_THAN> | <LESS_THAN> | <GREATER_THAN_EQUAL_TO> | <LESS_THAN_EQUAL_TO> | <EQUALS_EQUALS> | <NOT_EQUALS> ) var()
-|   ( <AND> | <OR> | <GREATER_THAN> | <LESS_THAN> | <GREATER_THAN_EQUAL_TO> | <LESS_THAN_EQUAL_TO> | <EQUALS_EQUALS> | <NOT_EQUALS> ) bool()
+    (<AND> | <OR> | <GREATER_THAN> | <LESS_THAN> | <GREATER_THAN_EQUAL_TO> | <LESS_THAN_EQUAL_TO>
+    | <EQUALS_EQUALS> | <NOT_EQUALS> ) (LOOKAHEAD(3) bool() | (ex() bool_prime()))
 }
 
 void LHS():
@@ -223,7 +264,7 @@ void LHS_prime():
 {
     var() LHS_prime()
 |   complex() LHS_prime()
-|   RHS()
+|   RHS() {System.out.println("entered rhs()");}
 }
 
 void RHS():
@@ -244,25 +285,26 @@ void RHS_prime():
     | <GREATER_THAN> | <NOT>) RHS_prime()
 |   expression() RHS_prime()
 |   <SEMICOLON>
-|   complex() RHS_prime()
+|   complex() RHS_prime() {System.out.println("entered complex()");}
 }
 
 void var():
 {}
 {
     <NOT> expression()
-|   LOOKAHEAD(2) <IDENTIFIER> params()
-|   <INTEGER_LITERAL> | <IDENTIFIER> | <TRUE> | <FALSE>
+|   <INTEGER_LITERAL>
+|   <IDENTIFIER> (LOOKAHEAD(2) params())?
+|   <TRUE>
+|   <FALSE>
 }
 
 void expression():
 {}
 {
     <LEFT_PARENTHESIS> expression() <RIGHT_PARENTHESIS> (LOOKAHEAD(2) expression_prime())*
+|   LOOKAHEAD(2) args() (LOOKAHEAD(2) expression_prime())*
 |   var() (LOOKAHEAD(2) expression_prime())*
 }
-
-
 
 void expression_prime():
 {}
@@ -271,8 +313,9 @@ void expression_prime():
     | <LESS_THAN_EQUAL_TO>
     | <GREATER_THAN_EQUAL_TO>
     | <LESS_THAN>
+    | <NOT_EQUALS>
     | <GREATER_THAN>
-    | <EQUALS_EQUALS>) var() (complex())?
+    | <EQUALS_EQUALS>) var() (LOOKAHEAD(2) complex())?
 }
 
 void complex():
@@ -280,7 +323,7 @@ void complex():
 {
     <PERIOD> var()
 |   <LEFT_BRACKET> complex_prime()
-|   <RIGHT_BRACKET>
+|   <RIGHT_BRACKET> (LOOKAHEAD(2) args_p())*
 |   <PLUS_PLUS>
 |   <MINUS_MINUS>
 |   <COMMA>
