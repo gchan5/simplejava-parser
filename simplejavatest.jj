@@ -332,8 +332,8 @@ void complex():
 }
 
 void complex_prime():
-{}
+{System.out.println("Entered complex prime");}
 {
-    expression() complex()
+    expression() (LOOKAHEAD(2) complex())?
 |   <RIGHT_BRACKET>
 }
